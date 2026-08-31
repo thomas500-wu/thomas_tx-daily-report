@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>台指期交易決策與分析儀表板 － 2026-08-28 夜盤預測</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a222c; --panel2:#212c38; --line:#2c3a49;
+    --txt:#e6edf3; --muted:#8b98a5; --up:#ff5b5b; --down:#25c26e; --flat:#8b98a5;
+    --accent:#4a9eff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    line-height:1.6;font-size:15px}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 18px 60px}
+  header h1{font-size:20px;margin:0 0 4px}
+  header .sub{color:var(--muted);font-size:13px}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--panel2);
+    border:1px solid var(--line);font-size:12px;color:var(--muted);margin-left:6px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px;margin-top:18px}
+  section h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  section h2::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+  .grid{display:grid;gap:12px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:720px){.g4,.g3,.g2{grid-template-columns:repeat(2,1fr)}}
+  .cell{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:12px}
+  .cell .k{color:var(--muted);font-size:12px;margin-bottom:4px}
+  .cell .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .cell .v.sm{font-size:15px}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted);font-weight:500;font-size:12px}
+  .pill{font-size:26px;font-weight:700}
+  canvas{max-width:100%}
+  .placeholder{color:var(--muted);font-size:14px;background:var(--panel2);
+    border:1px dashed var(--line);border-radius:9px;padding:16px;text-align:center}
+  footer{color:var(--muted);font-size:12px;margin-top:24px;line-height:1.8}
+  footer a{color:var(--accent)}
+  .radar-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+  @media(max-width:720px){.radar-wrap{grid-template-columns:1fr}}
+  .senti-label{text-align:center}
+  .senti-label .pill{color:#ff5b5b}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>台指期交易決策與分析儀表板 － 2026-08-28 夜盤預測</h1>
+  <div class="sub">
+    交易日 2026-08-28
+    <span class="badge">日盤收後 · 夜盤預測</span>
+    <span class="badge">最後更新 2026-09-01 00:01</span>
+  </div>
+</header>
+
+<!-- 盤面總結 -->
+<section>
+  <h2>盤面總結（TX 台指期 202609 近月）</h2>
+  <div class="grid g4">
+    <div class="cell"><div class="k">日盤收盤 / 結算</div><div class="v up">46,357</div></div>
+    <div class="cell"><div class="k">漲跌</div><div class="v up">+293 (+0.64%)</div></div>
+    <div class="cell"><div class="k">當日區間</div><div class="v sm">365 點</div></div>
+    <div class="cell"><div class="k">高 / 低</div><div class="v sm">46,580 / 46,215</div></div>
+    <div class="cell"><div class="k">夜盤收盤</div><div class="v sm up">46,388 (+324)</div></div>
+    <div class="cell"><div class="k">加權指數收盤</div><div class="v sm up">45,975 (+0.31%)</div></div>
+    <div class="cell"><div class="k">期現價差</div><div class="v sm">+382</div></div>
+    <div class="cell"><div class="k">樞紐點 Pivot</div><div class="v sm">46,384</div></div>
+  </div>
+</section>
+
+<!-- 技術面情緒 -->
+<section>
+  <h2>技術面情緒（規則式初步，僅供參考）</h2>
+  <div class="radar-wrap">
+    <canvas id="radar" height="240"></canvas>
+    <div class="senti-label">
+      <div class="pill">60%</div>
+      <div>偏多整理</div>
+    </div>
+  </div>
+</section>
+
+<!-- 三大法人 -->
+<section>
+  <h2>三大法人｜臺股期貨（口數）</h2>
+  <table>
+    <thead><tr><th>身份</th><th>單日淨額</th><th>未平倉淨額</th></tr></thead>
+    <tbody>
+      
+      <tr>
+        <td>自營商</td>
+        <td class="up">+295</td>
+        <td class="up">+657</td>
+      </tr>
+      
+      <tr>
+        <td>投信</td>
+        <td class="down">-82</td>
+        <td class="up">+76,752</td>
+      </tr>
+      
+      <tr>
+        <td>外資及陸資</td>
+        <td class="up">+1,137</td>
+        <td class="down">-83,655</td>
+      </tr>
+      
+    </tbody>
+  </table>
+  
+</section>
+
+<!-- 選擇權 -->
+<section>
+  <h2>選擇權籌碼</h2>
+  <div class="grid g4">
+    <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">100.7</div></div>
+    <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">101.4</div></div>
+    <div class="cell"><div class="k">最大 Call OI（壓力）</div><div class="v sm">46,500</div><div class="k">6,170 口</div></div>
+    <div class="cell"><div class="k">最大 Put OI（支撐）</div><div class="v sm">46,000</div><div class="k">3,937 口</div></div>
+  </div>
+</section>
+
+<!-- 支撐壓力 -->
+<section>
+  <h2>支撐壓力（古典樞紐點）</h2>
+  <div class="grid g4">
+    <div class="cell"><div class="k">R2</div><div class="v sm up">46,749</div></div>
+    <div class="cell"><div class="k">R1</div><div class="v sm up">46,553</div></div>
+    <div class="cell"><div class="k">Pivot</div><div class="v sm">46,384</div></div>
+    <div class="cell"><div class="k">S1</div><div class="v sm down">46,188</div></div>
+    <div class="cell"><div class="k">S2</div><div class="v sm down">46,019</div></div>
+    <div class="cell"><div class="k">R3</div><div class="v sm up">46,918</div></div>
+    <div class="cell"><div class="k">S3</div><div class="v sm down">45,823</div></div>
+  </div>
+</section>
+
+<!-- 波動區間 -->
+<section>
+  <h2>波動區間引擎（ATR）</h2>
+  
+  <div class="grid g3">
+    <div class="cell"><div class="k">主要情境（收盤 ± ATR）</div><div class="v sm">45,646 – 47,068</div></div>
+    <div class="cell"><div class="k">極端防禦（± 1.5×ATR）</div><div class="v sm">45,291 – 47,423</div></div>
+    <div class="cell"><div class="k">ATR(14)</div><div class="v sm">711 點</div></div>
+  </div>
+  
+</section>
+
+<!-- 走勢圖 -->
+<section>
+  <h2>日 K 收盤走勢（近 30 個交易日）</h2>
+  <canvas id="kline" height="220"></canvas>
+</section>
+
+<!-- 盤勢解讀（Phase 3） -->
+<section>
+  <h2>盤勢解讀與交易策略</h2>
+  
+  <div class="placeholder">此區塊將由 Claude API 自動生成（Phase 3）。在此之前為人工填寫或留白。</div>
+  
+</section>
+
+<!-- 收盤後驗證（Phase 2） -->
+<section>
+  <h2>收盤後驗證</h2>
+  
+  <div class="placeholder">待收盤後由隔日 06:30 的排程回填（Phase 2）。</div>
+  
+</section>
+
+<footer>
+  資料來源：期交所 TAIFEX OpenAPI（期貨/選擇權行情、三大法人、P/C ratio）、
+  證交所 TWSE OpenAPI（現貨三大法人）、Yahoo Finance（加權指數收盤）。<br>
+  本頁由 GitHub Actions 於每交易日 14:00 / 06:30（台北）自動生成，
+  <a href="reports/index.html">歷史報告存檔</a>。<br>
+  <strong>本頁為程式自動彙整之公開資訊,不構成投資建議,交易風險自負。</strong>
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "選擇權 P/C", "短期動能"], "values": [0, 57, 47, 100, 54, 100]};
+const KLINE = {"n": 30, "labels": ["07-21", "07-22", "07-23", "07-24", "07-27", "07-28", "07-29", "07-30", "07-31", "08-03", "08-04", "08-05", "08-06", "08-07", "08-10", "08-11", "08-12", "08-13", "08-14", "08-17", "08-18", "08-19", "08-20", "08-21", "08-24", "08-25", "08-26", "08-27", "08-28", "08-31"], "close": [44232.9, 44825.8, 44850.8, 43654.8, 43634.2, 41603.4, 40039.2, 39933.3, 43119.8, 43386.4, 43360.7, 44611.6, 44396.7, 44225.9, 44928.8, 45120.7, 45518.1, 46021.5, 45811.0, 45857.3, 45308.7, 44719.3, 44933.7, 45224.3, 44762.3, 45169.5, 45832.6, 45975.2, 46357.0, 46128.5]};
+const gridC = "#2c3a49", tickC = "#8b98a5";
+
+new Chart(document.getElementById("radar"), {
+  type: "radar",
+  data: {
+    labels: RADAR.labels,
+    datasets: [{
+      data: RADAR.values, label: "多空分數",
+      borderColor: "#4a9eff", backgroundColor: "rgba(74,158,255,.20)",
+      pointBackgroundColor: "#4a9eff"
+    }]
+  },
+  options: {
+    plugins: {legend: {display: false}},
+    scales: {r: {
+      min: 0, max: 100, ticks: {stepSize: 25, color: tickC, backdropColor: "transparent"},
+      grid: {color: gridC}, angleLines: {color: gridC},
+      pointLabels: {color: "#e6edf3", font: {size: 11}}
+    }}
+  }
+});
+
+new Chart(document.getElementById("kline"), {
+  type: "line",
+  data: {
+    labels: KLINE.labels,
+    datasets: [{
+      data: KLINE.close, label: "收盤",
+      borderColor: "#4a9eff", backgroundColor: "rgba(74,158,255,.12)",
+      fill: true, tension: .25, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: {
+    plugins: {legend: {display: false}},
+    scales: {
+      x: {grid: {color: gridC}, ticks: {color: tickC, maxTicksLimit: 8}},
+      y: {grid: {color: gridC}, ticks: {color: tickC}}
+    }
+  }
+});
+</script>
+</body>
+</html>

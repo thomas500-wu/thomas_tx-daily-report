@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ d.title }}</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#1a222c; --panel2:#212c38; --line:#2c3a49;
+    --txt:#e6edf3; --muted:#8b98a5; --up:#ff5b5b; --down:#25c26e; --flat:#8b98a5;
+    --accent:#4a9eff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    line-height:1.6;font-size:15px}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 18px 60px}
+  header h1{font-size:20px;margin:0 0 4px}
+  header .sub{color:var(--muted);font-size:13px}
+  .badge{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--panel2);
+    border:1px solid var(--line);font-size:12px;color:var(--muted);margin-left:6px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px;margin-top:18px}
+  section h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  section h2::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+  .grid{display:grid;gap:12px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:720px){.g4,.g3,.g2{grid-template-columns:repeat(2,1fr)}}
+  .cell{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:12px}
+  .cell .k{color:var(--muted);font-size:12px;margin-bottom:4px}
+  .cell .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .cell .v.sm{font-size:15px}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;font-size:14px}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted);font-weight:500;font-size:12px}
+  .pill{font-size:26px;font-weight:700}
+  canvas{max-width:100%}
+  .placeholder{color:var(--muted);font-size:14px;background:var(--panel2);
+    border:1px dashed var(--line);border-radius:9px;padding:16px;text-align:center}
+  footer{color:var(--muted);font-size:12px;margin-top:24px;line-height:1.8}
+  footer a{color:var(--accent)}
+  .radar-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+  @media(max-width:720px){.radar-wrap{grid-template-columns:1fr}}
+  .senti-label{text-align:center}
+  .senti-label .pill{color:{{ '#ff5b5b' if d.sentiment.overall>=55 else ('#25c26e' if d.sentiment.overall<=45 else '#8b98a5') }}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>{{ d.title }}</h1>
+  <div class="sub">
+    交易日 {{ d.data_date }}
+    <span class="badge">{{ d.session_label }}</span>
+    <span class="badge">最後更新 {{ d.updated }}</span>
+  </div>
+</header>
+
+<!-- 盤面總結 -->
+<section>
+  <h2>盤面總結（{{ d.summary.contract }} {{ d.summary.month }} 近月）</h2>
+  <div class="grid g4">
+    <div class="cell"><div class="k">日盤收盤 / 結算</div><div class="v {{ d.summary.dir }}">{{ d.summary.close }}</div></div>
+    <div class="cell"><div class="k">漲跌</div><div class="v {{ d.summary.dir }}">{{ d.summary.change }} ({{ d.summary.pct }})</div></div>
+    <div class="cell"><div class="k">當日區間</div><div class="v sm">{{ d.summary.range }} 點</div></div>
+    <div class="cell"><div class="k">高 / 低</div><div class="v sm">{{ d.summary.high }} / {{ d.summary.low }}</div></div>
+    <div class="cell"><div class="k">夜盤收盤</div><div class="v sm {{ d.summary.aft_dir }}">{{ d.summary.aft_last }} ({{ d.summary.aft_change }})</div></div>
+    <div class="cell"><div class="k">加權指數收盤</div><div class="v sm {{ d.twii.dir }}">{{ d.twii.close }} ({{ d.twii.pct }})</div></div>
+    <div class="cell"><div class="k">期現價差</div><div class="v sm">{{ d.summary.basis }}</div></div>
+    <div class="cell"><div class="k">樞紐點 Pivot</div><div class="v sm">{{ d.pivots.P }}</div></div>
+  </div>
+</section>
+
+<!-- 技術面情緒 -->
+<section>
+  <h2>技術面情緒（規則式初步，僅供參考）</h2>
+  <div class="radar-wrap">
+    <canvas id="radar" height="240"></canvas>
+    <div class="senti-label">
+      <div class="pill">{{ d.sentiment.overall }}%</div>
+      <div>{{ d.sentiment.label }}</div>
+    </div>
+  </div>
+</section>
+
+<!-- 三大法人 -->
+<section>
+  <h2>三大法人｜臺股期貨（口數）</h2>
+  <table>
+    <thead><tr><th>身份</th><th>單日淨額</th><th>未平倉淨額</th></tr></thead>
+    <tbody>
+      {% for row in d.institution %}
+      <tr>
+        <td>{{ row.name }}</td>
+        <td class="{{ row.day_dir }}">{{ row.day_net }}</td>
+        <td class="{{ row.oi_dir }}">{{ row.oi_net }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if d.spot %}
+  <table style="margin-top:10px">
+    <thead><tr><th>現貨買賣超（億元）</th><th>外資</th><th>投信</th><th>自營</th></tr></thead>
+    <tbody><tr><td>三大法人</td><td>{{ d.spot.foreign }}</td><td>{{ d.spot.invtrust }}</td><td>{{ d.spot.dealer }}</td></tr></tbody>
+  </table>
+  {% endif %}
+</section>
+
+<!-- 選擇權 -->
+<section>
+  <h2>選擇權籌碼</h2>
+  <div class="grid g4">
+    <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">{{ d.pc.volume_ratio }}</div></div>
+    <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">{{ d.pc.oi_ratio }}</div></div>
+    <div class="cell"><div class="k">最大 Call OI（壓力）</div><div class="v sm">{{ d.walls.call_strike }}</div><div class="k">{{ d.walls.call_oi }} 口</div></div>
+    <div class="cell"><div class="k">最大 Put OI（支撐）</div><div class="v sm">{{ d.walls.put_strike }}</div><div class="k">{{ d.walls.put_oi }} 口</div></div>
+  </div>
+</section>
+
+<!-- 支撐壓力 -->
+<section>
+  <h2>支撐壓力（古典樞紐點）</h2>
+  <div class="grid g4">
+    <div class="cell"><div class="k">R2</div><div class="v sm up">{{ d.pivots.R2 }}</div></div>
+    <div class="cell"><div class="k">R1</div><div class="v sm up">{{ d.pivots.R1 }}</div></div>
+    <div class="cell"><div class="k">Pivot</div><div class="v sm">{{ d.pivots.P }}</div></div>
+    <div class="cell"><div class="k">S1</div><div class="v sm down">{{ d.pivots.S1 }}</div></div>
+    <div class="cell"><div class="k">S2</div><div class="v sm down">{{ d.pivots.S2 }}</div></div>
+    <div class="cell"><div class="k">R3</div><div class="v sm up">{{ d.pivots.R3 }}</div></div>
+    <div class="cell"><div class="k">S3</div><div class="v sm down">{{ d.pivots.S3 }}</div></div>
+  </div>
+</section>
+
+<!-- 波動區間 -->
+<section>
+  <h2>波動區間引擎（ATR）</h2>
+  {% if d.vol %}
+  <div class="grid g3">
+    <div class="cell"><div class="k">主要情境（收盤 ± ATR）</div><div class="v sm">{{ d.vol.main_low }} – {{ d.vol.main_high }}</div></div>
+    <div class="cell"><div class="k">極端防禦（± 1.5×ATR）</div><div class="v sm">{{ d.vol.tail_low }} – {{ d.vol.tail_high }}</div></div>
+    <div class="cell"><div class="k">ATR({{ d.vol.n }})</div><div class="v sm">{{ d.vol.atr }} 點</div></div>
+  </div>
+  {% else %}
+  <div class="placeholder">歷史日 K 樣本不足 {{ d.vol_need }} 天，累積後自動顯示（目前 {{ d.hist_len }} 天）。</div>
+  {% endif %}
+</section>
+
+<!-- 走勢圖 -->
+<section>
+  <h2>日 K 收盤走勢（近 {{ d.chart.n }} 個交易日）</h2>
+  <canvas id="kline" height="220"></canvas>
+</section>
+
+<!-- 盤勢解讀（Phase 3） -->
+<section>
+  <h2>盤勢解讀與交易策略</h2>
+  {% if d.ai %}
+  <div>{{ d.ai | safe }}</div>
+  {% else %}
+  <div class="placeholder">此區塊將由 Claude API 自動生成（Phase 3）。在此之前為人工填寫或留白。</div>
+  {% endif %}
+</section>
+
+<!-- 收盤後驗證（Phase 2） -->
+<section>
+  <h2>收盤後驗證</h2>
+  {% if d.verify %}
+  <div class="grid g3">
+    <div class="cell"><div class="k">實際走勢</div><div class="v sm">{{ d.verify.path }}</div></div>
+    <div class="cell"><div class="k">實際波動區間</div><div class="v sm">{{ d.verify.range }}</div></div>
+    <div class="cell"><div class="k">方向命中</div><div class="v sm">{{ d.verify.hit }}</div></div>
+  </div>
+  {% else %}
+  <div class="placeholder">待收盤後由隔日 06:30 的排程回填（Phase 2）。</div>
+  {% endif %}
+</section>
+
+<footer>
+  資料來源：期交所 TAIFEX OpenAPI（期貨/選擇權行情、三大法人、P/C ratio）、
+  證交所 TWSE OpenAPI（現貨三大法人）、Yahoo Finance（加權指數收盤）。<br>
+  本頁由 GitHub Actions 於每交易日 14:00 / 06:30（台北）自動生成，
+  <a href="reports/index.html">歷史報告存檔</a>。<br>
+  <strong>本頁為程式自動彙整之公開資訊,不構成投資建議,交易風險自負。</strong>
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const RADAR = {{ d.radar_json | safe }};
+const KLINE = {{ d.chart_json | safe }};
+const gridC = "#2c3a49", tickC = "#8b98a5";
+
+new Chart(document.getElementById("radar"), {
+  type: "radar",
+  data: {
+    labels: RADAR.labels,
+    datasets: [{
+      data: RADAR.values, label: "多空分數",
+      borderColor: "#4a9eff", backgroundColor: "rgba(74,158,255,.20)",
+      pointBackgroundColor: "#4a9eff"
+    }]
+  },
+  options: {
+    plugins: {legend: {display: false}},
+    scales: {r: {
+      min: 0, max: 100, ticks: {stepSize: 25, color: tickC, backdropColor: "transparent"},
+      grid: {color: gridC}, angleLines: {color: gridC},
+      pointLabels: {color: "#e6edf3", font: {size: 11}}
+    }}
+  }
+});
+
+new Chart(document.getElementById("kline"), {
+  type: "line",
+  data: {
+    labels: KLINE.labels,
+    datasets: [{
+      data: KLINE.close, label: "收盤",
+      borderColor: "#4a9eff", backgroundColor: "rgba(74,158,255,.12)",
+      fill: true, tension: .25, pointRadius: 0, borderWidth: 2
+    }]
+  },
+  options: {
+    plugins: {legend: {display: false}},
+    scales: {
+      x: {grid: {color: gridC}, ticks: {color: tickC, maxTicksLimit: 8}},
+      y: {grid: {color: gridC}, ticks: {color: tickC}}
+    }
+  }
+});
+</script>
+</body>
+</html>
