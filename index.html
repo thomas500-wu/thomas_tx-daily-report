@@ -57,7 +57,7 @@
   <div class="sub">
     交易日 2026-08-28
     <span class="badge">日盤收後 · 夜盤預測</span>
-    <span class="badge">最後更新 2026-09-01 00:01</span>
+    <span class="badge">最後更新 2026-09-01 00:04</span>
   </div>
 </header>
 
@@ -70,8 +70,8 @@
     <div class="cell"><div class="k">當日區間</div><div class="v sm">365 點</div></div>
     <div class="cell"><div class="k">高 / 低</div><div class="v sm">46,580 / 46,215</div></div>
     <div class="cell"><div class="k">夜盤收盤</div><div class="v sm up">46,388 (+324)</div></div>
-    <div class="cell"><div class="k">加權指數收盤</div><div class="v sm up">45,975 (+0.31%)</div></div>
-    <div class="cell"><div class="k">期現價差</div><div class="v sm">+382</div></div>
+    <div class="cell"><div class="k">加權指數收盤</div><div class="v sm up">46,331 (+0.77%)</div></div>
+    <div class="cell"><div class="k">期現價差</div><div class="v sm">+26</div></div>
     <div class="cell"><div class="k">樞紐點 Pivot</div><div class="v sm">46,384</div></div>
   </div>
 </section>
@@ -82,7 +82,7 @@
   <div class="radar-wrap">
     <canvas id="radar" height="240"></canvas>
     <div class="senti-label">
-      <div class="pill">60%</div>
+      <div class="pill">55%</div>
       <div>偏多整理</div>
     </div>
   </div>
@@ -124,8 +124,8 @@
   <div class="grid g4">
     <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">100.7</div></div>
     <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">101.4</div></div>
-    <div class="cell"><div class="k">最大 Call OI（壓力）</div><div class="v sm">46,500</div><div class="k">6,170 口</div></div>
-    <div class="cell"><div class="k">最大 Put OI（支撐）</div><div class="v sm">46,000</div><div class="k">3,937 口</div></div>
+    <div class="cell"><div class="k">最大 Call OI（壓力）</div><div class="v sm">—</div><div class="k">— 口</div></div>
+    <div class="cell"><div class="k">最大 Put OI（支撐）</div><div class="v sm">—</div><div class="k">— 口</div></div>
   </div>
 </section>
 
@@ -189,7 +189,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "選擇權 P/C", "短期動能"], "values": [0, 57, 47, 100, 54, 100]};
+const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "選擇權 P/C", "短期動能"], "values": [0, 57, 47, 71, 54, 100]};
 const KLINE = {"n": 30, "labels": ["07-21", "07-22", "07-23", "07-24", "07-27", "07-28", "07-29", "07-30", "07-31", "08-03", "08-04", "08-05", "08-06", "08-07", "08-10", "08-11", "08-12", "08-13", "08-14", "08-17", "08-18", "08-19", "08-20", "08-21", "08-24", "08-25", "08-26", "08-27", "08-28", "08-31"], "close": [44232.9, 44825.8, 44850.8, 43654.8, 43634.2, 41603.4, 40039.2, 39933.3, 43119.8, 43386.4, 43360.7, 44611.6, 44396.7, 44225.9, 44928.8, 45120.7, 45518.1, 46021.5, 45811.0, 45857.3, 45308.7, 44719.3, 44933.7, 45224.3, 44762.3, 45169.5, 45832.6, 45975.2, 46357.0, 46128.5]};
 const gridC = "#2c3a49", tickC = "#8b98a5";
 
