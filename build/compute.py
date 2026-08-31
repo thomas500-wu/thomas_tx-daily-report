@@ -59,16 +59,21 @@ def load_history(path: str) -> list[dict]:
 def append_today(path: str, row: dict) -> list[dict]:
     """把今天的 OHLC 併進 CSV(同日期已存在則以新值覆蓋),回傳排序後的完整歷史。"""
     hist = {r["date"]: r for r in load_history(path)}
-    if row.get("date") and all(row.get(k) is not None for k in ("high", "low", "close")):
-        hist[row["date"]] = {
-            "date": row["date"],
+    cutoff = row.get("date")
+    if cutoff and all(row.get(k) is not None for k in ("high", "low", "close")):
+        hist[cutoff] = {
+            "date": cutoff,
             "open": row.get("open") or row["close"],
             "high": row["high"],
             "low": row["low"],
             "close": row["close"],
             "source": row.get("source", "TX"),
         }
-    merged = sorted(hist.values(), key=lambda x: x["date"])
+    # 丟掉比本次交易日還新的列(代理來源灌歷史時可能帶進週末/未完成的假 bar)
+    merged = sorted(
+        (r for r in hist.values() if not cutoff or r["date"] <= cutoff),
+        key=lambda x: x["date"],
+    )
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=HIST_HEADER)
@@ -136,7 +141,7 @@ def sentiment(ctx: dict) -> dict:
     twii = ctx.get("twii", {}) or {}
     if fut.get("close") and twii.get("close"):
         basis = fut["close"] - twii["close"]
-        axes["期現價差"] = _clamp(50 + basis / 60 * 50)
+        axes["期現價差"] = _clamp(50 + basis / 120 * 50)
         ctx["basis"] = basis
 
     # 5) 選擇權 P/C OI ratio(>100 偏多;用 80~120 對應 0~100)
