@@ -38,12 +38,15 @@
   th:first-child,td:first-child{text-align:left}
   th{color:var(--muted);font-weight:500;font-size:12px}
   .pill{font-size:26px;font-weight:700}
+  .chartbox{position:relative;width:100%}
+  .chartbox.radar{height:300px}
+  .chartbox.kline{height:260px}
   canvas{max-width:100%}
   .placeholder{color:var(--muted);font-size:14px;background:var(--panel2);
     border:1px dashed var(--line);border-radius:9px;padding:16px;text-align:center}
   footer{color:var(--muted);font-size:12px;margin-top:24px;line-height:1.8}
   footer a{color:var(--accent)}
-  .radar-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+  .radar-wrap{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:center}
   @media(max-width:720px){.radar-wrap{grid-template-columns:1fr}}
   .senti-label{text-align:center}
   .senti-label .pill{color:{{ '#ff5b5b' if d.sentiment.overall>=55 else ('#25c26e' if d.sentiment.overall<=45 else '#8b98a5') }}}
@@ -80,7 +83,7 @@
 <section>
   <h2>技術面情緒（規則式初步，僅供參考）</h2>
   <div class="radar-wrap">
-    <canvas id="radar" height="240"></canvas>
+    <div class="chartbox radar"><canvas id="radar"></canvas></div>
     <div class="senti-label">
       <div class="pill">{{ d.sentiment.overall }}%</div>
       <div>{{ d.sentiment.label }}</div>
@@ -153,7 +156,7 @@
 <!-- 走勢圖 -->
 <section>
   <h2>日 K 收盤走勢（近 {{ d.chart.n }} 個交易日）</h2>
-  <canvas id="kline" height="220"></canvas>
+  <div class="chartbox kline"><canvas id="kline"></canvas></div>
 </section>
 
 <!-- 盤勢解讀（Phase 3） -->
@@ -207,11 +210,12 @@ new Chart(document.getElementById("radar"), {
     }]
   },
   options: {
+    responsive: true, maintainAspectRatio: false,
     plugins: {legend: {display: false}},
     scales: {r: {
       min: 0, max: 100, ticks: {stepSize: 25, color: tickC, backdropColor: "transparent"},
       grid: {color: gridC}, angleLines: {color: gridC},
-      pointLabels: {color: "#e6edf3", font: {size: 11}}
+      pointLabels: {color: "#e6edf3", font: {size: 10}}
     }}
   }
 });
@@ -227,6 +231,7 @@ new Chart(document.getElementById("kline"), {
     }]
   },
   options: {
+    responsive: true, maintainAspectRatio: false,
     plugins: {legend: {display: false}},
     scales: {
       x: {grid: {color: gridC}, ticks: {color: tickC, maxTicksLimit: 8}},
