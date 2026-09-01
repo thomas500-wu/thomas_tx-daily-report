@@ -87,6 +87,9 @@ def fetch_futures() -> dict:
             "pct": to_float(str(base.get("%", "")).rstrip("%")),
             "aft_last": to_float(aft.get("Last")) if aft else None,
             "aft_change": to_float(aft.get("Change")) if aft else None,
+            "aft_open": to_float(aft.get("Open")) if aft else None,
+            "aft_high": to_float(aft.get("High")) if aft else None,
+            "aft_low": to_float(aft.get("Low")) if aft else None,
         }
     return out
 
@@ -206,49 +209,101 @@ def fetch_oi_walls() -> dict:
 
 
 # --------------------------------------------------------------------------- #
-# 加權指數(收盤 + 前一日,用 Yahoo ^TWII)
+# 加權指數收盤(TWSE OpenAPI MI_INDEX,官方每日收盤;取代原本的 Yahoo ^TWII)
+#
+# 2026-08 踩坑:Yahoo ^TWII 是即時報價,同一交易日多次抓會抓到不同快照(差 200~400
+# 點),導致「加權指數收盤」「期現價差」不穩定。改用證交所官方 MI_INDEX,一天只
+# 公布一次收盤值,穩定且免 key。回傳已含當日漲跌/漲跌%,不用再自己抓前一日算。
 # --------------------------------------------------------------------------- #
-def fetch_twii() -> dict:
+def fetch_taiex() -> dict:
     try:
-        import yfinance as yf
-
-        h = yf.Ticker("^TWII").history(period="10d", interval="1d", auto_adjust=False)
-        c = h["Close"].dropna()
-        if len(c):
-            return {
-                "close": float(c.iloc[-1]),
-                "prev": float(c.iloc[-2]) if len(c) >= 2 else None,
-                "date": c.index[-1].strftime("%Y-%m-%d"),
-            }
+        rows = _taifex_like_twse_json("exchangeReport/MI_INDEX")
     except Exception as exc:  # noqa: BLE001
-        print(f"[warn] ^TWII 失敗:{exc}", file=sys.stderr)
-    return {}
-
-
-# --------------------------------------------------------------------------- #
-# 現貨三大法人買賣超(TWSE BFI82U;台股休市 / TWSE 不通時回 None)
-# --------------------------------------------------------------------------- #
-def fetch_spot_institution() -> dict:
-    try:
-        rows = _get(f"{TWSE}/fund/BFI82U").json()
-    except Exception as exc:  # noqa: BLE001
-        print(f"[warn] TWSE BFI82U 失敗(略過現貨法人):{exc}", file=sys.stderr)
+        print(f"[warn] TWSE MI_INDEX 失敗:{exc}", file=sys.stderr)
         return {}
 
+    row = next((r for r in rows if str(r.get("指數", "")).strip() == "發行量加權股價指數"), None)
+    if not row:
+        return {}
+    close = to_float(row.get("收盤指數"))
+    pts = to_float(row.get("漲跌點數"))
+    sign = -1 if str(row.get("漲跌", "")).strip() == "-" else 1
+    pct = to_float(row.get("漲跌百分比"))
+    return {
+        "date": _roc_to_iso(row.get("日期")),
+        "close": close,
+        "change": (sign * pts) if pts is not None else None,
+        "pct": pct,
+    }
+
+
+# 沿用舊名,避免其他地方忘了改;新程式碼請用 fetch_taiex()
+fetch_twii = fetch_taiex
+
+
+def _roc_to_iso(raw) -> str:
+    """民國年 8 碼(如 1150831)轉西元 ISO(2026-08-31)。"""
+    s = str(raw or "").strip()
+    if len(s) == 7 and s.isdigit():  # 民國年通常 3 碼(115)
+        y, m, d = int(s[:3]) + 1911, s[3:5], s[5:]
+        return f"{y}-{m}-{d}"
+    return s
+
+
+def _taifex_like_twse_json(path: str) -> list[dict]:
+    return _get(f"{TWSE}/{path}").json()
+
+
+# --------------------------------------------------------------------------- #
+# 現貨三大法人買賣超
+#
+# 2026-08 踩坑:TWSE OpenAPI 的 `v1/fund/BFI82U` 已經不存在(swagger 裡查無此
+# path,呼叫只會拿到一個偽 404 頁面、HTTP 200,`.json()` 直接炸掉,被 try/except
+# 吞掉後整區塊悄悄消失,長期以為是「休市才空」,其實是端點本身失效)。改走證交
+# 所網站本身在用的舊版 AJAX JSON 端點,已驗證交易日有正常回傳。
+# --------------------------------------------------------------------------- #
+def fetch_spot_institution() -> dict:
+    url = "https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&date=&_=0"
+    try:
+        payload = _get(url).json()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[warn] TWSE BFI82U(現貨三大法人)失敗(略過現貨法人):{exc}", file=sys.stderr)
+        return {}
+
+    if str(payload.get("stat", "")).strip() != "OK":
+        return {}
+
+    fields = payload.get("fields") or []
+    rows = payload.get("data") or []
+    try:
+        name_i = fields.index("單位名稱")
+        net_i = fields.index("買賣差額")
+    except ValueError:
+        return {}
+
+    # 自營商拆「自行買賣」/「避險」兩列;其餘三大法人(投信/外資)各一列直接對應。
+    # 外資自營商已計入自營商買賣金額,依證交所備註不重複納入三大法人合計,故略過。
     label = {
         "外資及陸資(不含外資自營商)": "foreign",
         "外資及陸資": "foreign",
         "投信": "invtrust",
-        "自營商": "dealer",
-        "自營商(自行買賣)": "dealer_self",
+        "自營商(自行買賣)": "dealer",
+        "自營商(避險)": "dealer",
     }
     out: dict = {}
     for r in rows:
-        name = str(r.get("單位名稱", "")).strip()
-        key = label.get(name)
-        if not key or key in out:
+        if len(r) <= max(name_i, net_i):
             continue
-        net = to_float(r.get("買賣差額"))
-        if net is not None:
-            out[key] = {"name": name, "net_twd": net}  # 單位:元
+        name = str(r[name_i]).strip()
+        key = label.get(name)
+        if not key:
+            continue
+        net = to_float(r[net_i])
+        if net is None:
+            continue
+        prev = out.get(key)
+        out[key] = {
+            "name": "自營商" if key == "dealer" else name,
+            "net_twd": (prev["net_twd"] + net) if prev else net,
+        }
     return out
