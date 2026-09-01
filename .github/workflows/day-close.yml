@@ -37,7 +37,13 @@ jobs:
           git add -A
           if git diff --cached --quiet; then
             echo "沒有變更,略過 commit"
-          else
-            git commit -m "report: day-close $(TZ=Asia/Taipei date +%Y-%m-%d\ %H:%M)"
-            git push
+            exit 0
           fi
+          git commit -m "report: day-close $(TZ=Asia/Taipei date +%Y-%m-%d\ %H:%M)"
+          for i in 1 2 3; do
+            git push && exit 0
+            echo "push 被拒(可能跟另一個 run 撞了),pull --rebase 後重試第 $i 次"
+            git pull --rebase --autostash
+          done
+          echo "push 重試 3 次仍失敗"
+          exit 1
