@@ -24,6 +24,7 @@ import fetch
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HIST_CSV = os.path.join(ROOT, "data", "tx_daily.csv")
 REPORTS_DIR = os.path.join(ROOT, "reports")
+PRED_DIR = os.path.join(ROOT, "data", "predictions")
 TPE = timezone(timedelta(hours=8))
 
 SESSIONS = {
@@ -80,7 +81,7 @@ def build_context(session: str) -> dict:
     inst = fetch.fetch_institution_futures()
     pcr = fetch.fetch_put_call_ratio()
     walls = fetch.fetch_oi_walls()
-    twii = fetch.fetch_twii()
+    taiex = fetch.fetch_taiex()
     spot = fetch.fetch_spot_institution()
 
     data_date = ymd(tx.get("date")) or now.strftime("%Y-%m-%d")
@@ -100,9 +101,9 @@ def build_context(session: str) -> dict:
     # 情緒(規則式)
     senti = compute.sentiment({
         "futures": futures, "institution_fut": inst, "put_call": pcr,
-        "pivots": piv, "history": history, "twii": twii,
+        "pivots": piv, "history": history, "twii": taiex,
     })
-    basis = tx["close"] - twii["close"] if twii.get("close") else None
+    basis = tx["close"] - taiex["close"] if taiex.get("close") else None
 
     # 走勢圖(近 30)
     tail = history[-30:]
@@ -147,9 +148,9 @@ def build_context(session: str) -> dict:
             "basis": sgn(basis) if basis is not None else "—",
         },
         "twii": {
-            "close": n0(twii.get("close")),
-            "pct": pct((twii["close"] / twii["prev"] - 1) * 100) if twii.get("prev") else "—",
-            "dir": dircls((twii.get("close", 0) - twii.get("prev", 0)) if twii.get("prev") else 0),
+            "close": n0(taiex.get("close")),
+            "pct": pct(taiex.get("pct")),
+            "dir": dircls(taiex.get("change")),
         },
         "sentiment": senti,
         "institution": inst_rows,
@@ -179,7 +180,79 @@ def build_context(session: str) -> dict:
             "tail_low": n0(vol_tail["low"]), "tail_high": n0(vol_tail["high"]),
             "atr": n0(atr_val), "n": 14,
         }
+
+    # Phase 2:day-close 收盤時存一份「預測快照」,給隔天 06:30 next-day 回頭核對用。
+    # next-day 抓到的仍是同一個交易日 date_date 的資料(夜盤掛在日盤那一天,直到
+    # 05:00 收盤才算完整),所以用同一組 data_date 存/取即可,不用往前找一天。
+    if session == "day-close":
+        save_prediction(data_date, {
+            "close": tx["close"],
+            "sentiment_overall": senti["overall"],
+            "sentiment_label": senti["label"],
+            "vol_main": vol_main,
+            "vol_tail": vol_tail,
+        })
+    if session == "next-day":
+        d["verify"] = build_verify(tx, load_prediction(data_date))
+
     return d
+
+
+# --------------------------------------------------------------------------- #
+# Phase 2:收盤後驗證 —— day-close 存預測快照,next-day 回頭比對夜盤實際結果
+# --------------------------------------------------------------------------- #
+def save_prediction(data_date: str, pred: dict) -> None:
+    os.makedirs(PRED_DIR, exist_ok=True)
+    with open(os.path.join(PRED_DIR, f"{data_date}.json"), "w", encoding="utf-8") as f:
+        json.dump(pred, f, ensure_ascii=False)
+
+
+def load_prediction(data_date: str) -> dict | None:
+    path = os.path.join(PRED_DIR, f"{data_date}.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:  # noqa: BLE001
+        print(f"[warn] 讀取預測快照 {path} 失敗:{exc}", file=sys.stderr)
+        return None
+
+
+def build_verify(tx: dict, pred: dict | None) -> dict:
+    """比對 day-close 當時存的預測快照 vs 夜盤(盤後)實際結果。"""
+    aft_last, aft_high, aft_low = tx.get("aft_last"), tx.get("aft_high"), tx.get("aft_low")
+    aft_change = tx.get("aft_change") or 0
+
+    if aft_last is None or aft_high is None or aft_low is None:
+        return {
+            "path": "夜盤尚無完整資料(可能休市或 TAIFEX 尚未更新)",
+            "range": "—",
+            "hit": "—",
+        }
+
+    path = f"開 {n0(tx.get('aft_open'))} → 高 {n0(aft_high)} → 低 {n0(aft_low)} → 收 {n0(aft_last)}"
+    rng = f"{n0(aft_low)} – {n0(aft_high)}（寬 {n0(aft_high - aft_low)} 點）"
+
+    if not pred:
+        return {"path": path, "range": rng, "hit": "找不到前一份日盤收後的預測快照,無法核對方向命中"}
+
+    overall = pred.get("sentiment_overall", 50)
+    pred_dir = "多" if overall >= 55 else ("空" if overall <= 45 else "中性")
+    actual_dir = "漲" if aft_change > 0 else ("跌" if aft_change < 0 else "平")
+
+    if pred_dir == "中性":
+        hit = f"預測中性(規則式分數 {overall}%),不判定方向命中；夜盤實際{actual_dir}"
+    else:
+        matched = (pred_dir == "多" and aft_change > 0) or (pred_dir == "空" and aft_change < 0)
+        hit = f"{'✅ 命中' if matched else '❌ 未命中'}(預測偏{pred_dir}，夜盤實際{actual_dir})"
+
+    vol_main = pred.get("vol_main")
+    if vol_main:
+        in_band = vol_main["low"] <= aft_last <= vol_main["high"]
+        hit += f"；{'落在' if in_band else '突破'} ATR 主區間（{n0(vol_main['low'])}–{n0(vol_main['high'])}）"
+
+    return {"path": path, "range": rng, "hit": hit}
 
 
 def write_reports_index() -> None:

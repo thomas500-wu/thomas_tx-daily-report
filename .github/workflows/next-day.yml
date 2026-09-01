@@ -1,0 +1,45 @@
+name: 台指期報告 - 夜盤回顧
+
+# 22:30 UTC = 06:30 台北(隔日)。夜盤 05:00 收盤,留 1.5 小時緩衝等 TAIFEX 更新。
+# 注意:cron 的星期是 UTC 星期,22:30 UTC 已跨到台北隔天,所以要抓「UTC 週日~週四」
+# 才會落在「台北週一~週五」的早上(週日 22:30 UTC = 週一 06:30 台北)。
+on:
+  schedule:
+    - cron: "30 22 * * 0-4"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tx-report
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 安裝相依套件
+        run: pip install -r requirements.txt
+
+      - name: 產生報告(夜盤回顧 + 今日展望)
+        run: python build/render.py --session next-day
+
+      - name: Commit & push 產出
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "沒有變更,略過 commit"
+          else
+            git commit -m "report: next-day $(TZ=Asia/Taipei date +%Y-%m-%d\ %H:%M)"
+            git push
+          fi
