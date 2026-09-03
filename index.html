@@ -60,7 +60,7 @@
   <div class="sub">
     交易日 2026-09-02
     <span class="badge">日盤收後 · 夜盤預測</span>
-    <span class="badge">最後更新 2026-09-04 01:07</span>
+    <span class="badge">最後更新 2026-09-04 03:23</span>
     <span class="badge" style="background:#3a2a12;border-color:#7a5a1a;color:#ffce7a">⚠ 期交所 OpenAPI 最新僅到 2026-09-02（預期 2026-09-03；非休市即為更新延遲，稍後排程會自動補上）</span>
   </div>
 </header>
@@ -74,8 +74,8 @@
     <div class="cell"><div class="k">當日區間</div><div class="v sm">615 點</div></div>
     <div class="cell"><div class="k">高 / 低</div><div class="v sm">46,746 / 46,131</div></div>
     <div class="cell"><div class="k">夜盤收盤</div><div class="v sm down">46,679 (-522)</div></div>
-    <div class="cell"><div class="k">加權指數收盤</div><div class="v sm down">46,165 (-1.67%)</div></div>
-    <div class="cell"><div class="k">期現價差</div><div class="v sm">+0</div></div>
+    <div class="cell"><div class="k">加權指數收盤</div><div class="v sm flat">— (—)</div></div>
+    <div class="cell"><div class="k">期現價差</div><div class="v sm">—</div></div>
     <div class="cell"><div class="k">樞紐點 Pivot</div><div class="v sm">46,347</div></div>
   </div>
 </section>
@@ -86,7 +86,7 @@
   <div class="radar-wrap">
     <div class="chartbox radar"><canvas id="radar"></canvas></div>
     <div class="senti-label">
-      <div class="pill">28%</div>
+      <div class="pill">24%</div>
       <div>偏空</div>
     </div>
   </div>
@@ -198,7 +198,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "選擇權 P/C", "短期動能"], "values": [0, 19, 30, 50, 10, 62]};
+const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "選擇權 P/C", "短期動能"], "values": [0, 19, 30, 10, 62]};
 const KLINE = {"n": 30, "labels": ["07-23", "07-24", "07-27", "07-28", "07-29", "07-30", "07-31", "08-03", "08-04", "08-05", "08-06", "08-07", "08-10", "08-11", "08-12", "08-13", "08-14", "08-17", "08-18", "08-19", "08-20", "08-21", "08-24", "08-25", "08-26", "08-27", "08-28", "08-31", "09-01", "09-02"], "close": [44850.8, 43654.8, 43634.2, 41603.4, 40039.2, 39933.3, 43119.8, 43386.4, 43360.7, 44611.6, 44396.7, 44225.9, 44928.8, 45120.7, 45518.1, 46021.5, 45811.0, 45857.3, 45308.7, 44719.3, 44933.7, 45224.3, 44762.3, 45169.5, 45832.6, 45975.2, 46357.0, 45977.0, 47201.0, 46165.0]};
 const gridC = "#2c3a49", tickC = "#8b98a5";
 
