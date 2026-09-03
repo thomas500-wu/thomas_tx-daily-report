@@ -67,6 +67,24 @@ def ymd(raw: str) -> str:
     return s
 
 
+def expected_data_date(now: datetime) -> str:
+    """粗估『期交所此刻應該已經有的最新交易日』(ISO)。
+
+    - 平日 14:20 之後 → 當天(日盤收盤/結算資料通常已公布)
+    - 平日 14:20 之前、或週末 → 往前退到最近一個已收盤的平日
+
+    無法判斷國定假日 / 颱風假,所以休市日會被算成「延遲」;寧可標出來讓人自己查,
+    也不要靜靜顯示舊資料當成今天的。
+    """
+    d = now.date()
+    after_close = now.hour > 14 or (now.hour == 14 and now.minute >= 20)
+    if now.weekday() >= 5 or not after_close:
+        d -= timedelta(days=1)
+    while d.weekday() >= 5:  # 週六=5、週日=6
+        d -= timedelta(days=1)
+    return d.isoformat()
+
+
 # --------------------------------------------------------------------------- #
 def build_context(session: str) -> dict:
     short, long = SESSIONS[session]
@@ -85,6 +103,8 @@ def build_context(session: str) -> dict:
     spot = fetch.fetch_spot_institution()
 
     data_date = ymd(tx.get("date")) or now.strftime("%Y-%m-%d")
+    expected = expected_data_date(now)
+    stale = {"have": data_date, "expected": expected} if data_date < expected else None
 
     # 樞紐點
     piv = compute.pivots(tx["high"], tx["low"], tx["close"]) if tx.get("high") and tx.get("low") else {}
@@ -135,6 +155,7 @@ def build_context(session: str) -> dict:
     d = {
         "title": f"台指期交易決策與分析儀表板 － {data_date} {short}",
         "data_date": data_date,
+        "stale": stale,
         "session_label": long,
         "updated": now.strftime("%Y-%m-%d %H:%M"),
         "summary": {
@@ -295,6 +316,9 @@ def main() -> int:
         f.write(page)
     write_reports_index()
 
+    if d["stale"]:
+        print(f"[warn] 期交所 OpenAPI 最新僅到 {d['stale']['have']},預期 {d['stale']['expected']}"
+              f"(非休市則為上游更新延遲;稍後補跑的排程會自動接住)", file=sys.stderr)
     print(f"[ok] 產生報告 {d['data_date']} ({args.session}),歷史 {d['hist_len']} 天")
     return 0
 

@@ -61,6 +61,7 @@
     交易日 {{ d.data_date }}
     <span class="badge">{{ d.session_label }}</span>
     <span class="badge">最後更新 {{ d.updated }}</span>
+    {% if d.stale %}<span class="badge" style="background:#3a2a12;border-color:#7a5a1a;color:#ffce7a">⚠ 期交所 OpenAPI 最新僅到 {{ d.stale.have }}（預期 {{ d.stale.expected }}；非休市即為更新延遲，稍後排程會自動補上）</span>{% endif %}
   </div>
 </header>
 
