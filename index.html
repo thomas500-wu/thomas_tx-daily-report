@@ -60,7 +60,7 @@
   <div class="sub">
     交易日 2026-10-22
     <span class="badge">夜盤回顧 · 今日展望</span>
-    <span class="badge">最後更新 2026-10-26 08:36</span>
+    <span class="badge">最後更新 2026-10-26 13:08</span>
     <span class="badge" style="background:#3a2a12;border-color:#7a5a1a;color:#ffce7a">⚠ 期交所 OpenAPI 最新僅到 2026-10-22（預期 2026-10-23；非休市即為更新延遲，稍後排程會自動補上）</span>
   </div>
 </header>
@@ -86,7 +86,7 @@
   <div class="radar-wrap">
     <div class="chartbox radar"><canvas id="radar"></canvas></div>
     <div class="senti-label">
-      <div class="pill">30%</div>
+      <div class="pill">36%</div>
       <div>偏空</div>
     </div>
   </div>
@@ -131,8 +131,8 @@
 <section>
   <h2>選擇權籌碼</h2>
   <div class="grid g4">
-    <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">86.2</div></div>
-    <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">66.2</div></div>
+    <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">—</div></div>
+    <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">—</div></div>
     <div class="cell"><div class="k">最大 Call OI（壓力）</div><div class="v sm">—</div><div class="k">— 口</div></div>
     <div class="cell"><div class="k">最大 Put OI（支撐）</div><div class="v sm">—</div><div class="k">— 口</div></div>
   </div>
@@ -202,7 +202,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "選擇權 P/C", "短期動能"], "values": [0, 42, 11, 100, 0, 25]};
+const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "短期動能"], "values": [0, 42, 11, 100, 25]};
 const KLINE = {"n": 30, "labels": ["09-08", "09-09", "09-10", "09-11", "09-14", "09-15", "09-16", "09-17", "09-18", "09-21", "09-22", "09-23", "09-24", "09-29", "09-30", "10-01", "10-02", "10-05", "10-06", "10-07", "10-08", "10-12", "10-13", "10-14", "10-15", "10-16", "10-19", "10-20", "10-21", "10-22"], "close": [46955.0, 47178.0, 46869.0, 46187.0, 45777.0, 45592.0, 45759.0, 46459.0, 47428.0, 48053.0, 48225.0, 48312.0, 48125.0, 47781.0, 48330.0, 48698.0, 48669.0, 49944.0, 50082.0, 49968.0, 49357.0, 49345.0, 48392.0, 48798.0, 46931.0, 47284.0, 46769.0, 46341.0, 46648.0, 46234.0]};
 const gridC = "#2c3a49", tickC = "#8b98a5";
 
