@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>台指期交易決策與分析儀表板 － 2026-11-23 今日展望</title>
+<title>台指期交易決策與分析儀表板 － 2026-11-23 夜盤預測</title>
 <style>
   :root{
     --bg:#0f1419; --panel:#1a222c; --panel2:#212c38; --line:#2c3a49;
@@ -56,11 +56,11 @@
 <div class="wrap">
 
 <header>
-  <h1>台指期交易決策與分析儀表板 － 2026-11-23 今日展望</h1>
+  <h1>台指期交易決策與分析儀表板 － 2026-11-23 夜盤預測</h1>
   <div class="sub">
     交易日 2026-11-23
-    <span class="badge">夜盤回顧 · 今日展望</span>
-    <span class="badge">最後更新 2026-11-24 20:44</span>
+    <span class="badge">日盤收後 · 夜盤預測</span>
+    <span class="badge">最後更新 2026-11-25 03:00</span>
     <span class="badge" style="background:#3a2a12;border-color:#7a5a1a;color:#ffce7a">⚠ 期交所 OpenAPI 最新僅到 2026-11-23（預期 2026-11-24；非休市即為更新延遲，稍後排程會自動補上）</span>
   </div>
 </header>
@@ -86,7 +86,7 @@
   <div class="radar-wrap">
     <div class="chartbox radar"><canvas id="radar"></canvas></div>
     <div class="senti-label">
-      <div class="pill">23%</div>
+      <div class="pill">19%</div>
       <div>偏空</div>
     </div>
   </div>
@@ -131,8 +131,8 @@
 <section>
   <h2>選擇權籌碼</h2>
   <div class="grid g4">
-    <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">—</div></div>
-    <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">—</div></div>
+    <div class="cell"><div class="k">Put/Call 量比</div><div class="v sm">54.2</div></div>
+    <div class="cell"><div class="k">Put/Call OI 比</div><div class="v sm">30.9</div></div>
     <div class="cell"><div class="k">最大 Call OI（壓力）</div><div class="v sm">—</div><div class="k">— 口</div></div>
     <div class="cell"><div class="k">最大 Put OI（支撐）</div><div class="v sm">—</div><div class="k">— 口</div></div>
   </div>
@@ -182,11 +182,7 @@
 <section>
   <h2>收盤後驗證</h2>
   
-  <div class="grid g3">
-    <div class="cell"><div class="k">實際走勢</div><div class="v sm">開 35,943 → 高 36,396 → 低 33,719 → 收 33,919</div></div>
-    <div class="cell"><div class="k">實際波動區間</div><div class="v sm">33,719 – 36,396（寬 2,677 點）</div></div>
-    <div class="cell"><div class="k">方向命中</div><div class="v sm">✅ 命中(預測偏空，夜盤實際跌)；突破 ATR 主區間（34,442–38,876）</div></div>
-  </div>
+  <div class="placeholder">待收盤後由隔日 06:30 的排程回填（Phase 2）。</div>
   
 </section>
 
@@ -202,7 +198,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "短期動能"], "values": [0, 15, 100, 0, 0]};
+const RADAR = {"labels": ["外資期貨淨部位", "外資單日進出", "價格位階", "期現價差", "選擇權 P/C", "短期動能"], "values": [0, 15, 100, 0, 0, 0]};
 const KLINE = {"n": 30, "labels": ["10-08", "10-12", "10-13", "10-14", "10-15", "10-16", "10-19", "10-20", "10-21", "10-22", "10-27", "10-28", "10-29", "10-30", "11-02", "11-03", "11-04", "11-05", "11-06", "11-09", "11-10", "11-11", "11-12", "11-13", "11-16", "11-17", "11-18", "11-19", "11-20", "11-23"], "close": [49357.0, 49345.0, 48392.0, 48798.0, 46931.0, 47284.0, 46769.0, 46341.0, 46648.0, 46234.0, 46106.0, 47249.0, 46569.0, 45300.0, 45227.0, 43353.0, 43203.0, 41882.0, 39652.0, 41478.0, 42646.0, 44136.0, 43128.0, 43839.0, 40781.0, 40011.0, 40025.0, 38607.0, 35800.0, 36659.0]};
 const gridC = "#2c3a49", tickC = "#8b98a5";
 
